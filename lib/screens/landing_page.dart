@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'registration_page.dart';
+import 'google_sign_in_page.dart';
 
 class HabitlyColors {
   static const background = Color(0xFFF3E7D3);
@@ -62,7 +63,14 @@ class LandingPage extends StatelessWidget {
                     width: double.infinity,
                     height: 52,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const GoogleSignInPage(),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: HabitlyColors.buttonFill,
                         foregroundColor: HabitlyColors.ink,
