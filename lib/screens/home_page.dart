@@ -5,27 +5,15 @@ import 'landing_page.dart';
 /// One task.
 class Task {
   final String title;
-  final String description;
-  final String timeToComplete;
-  final String reminder;
+  final String priority; // 'Low', 'Medium' or 'High'
   final DateTime due;
-  final String priority;
-  final List<String> tags;
 
-  const Task({
-    required this.title,
-    required this.description,
-    required this.timeToComplete,
-    required this.reminder,
-    required this.due,
-    required this.priority,
-    required this.tags,
-  });
+  const Task({required this.title, required this.priority, required this.due});
 }
 
 class HomePage extends StatefulWidget {
   final String username;
-  const HomePage({super.key, this.username = 'there'});
+  const HomePage({super.key, this.username = ''});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -33,55 +21,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _tabIndex = 0;
+  final List<Task> _tasks = []; // starts empty
 
   static const _cardColor = Color(0xFFE9DCC6);
   static const _tileColor = Color(0xFFFAF4EA);
-
-  // The tasks shown on Home (sample tasks to start with)
-  final List<Task> _tasks = [
-    Task(
-      title: 'Repot the monstera',
-      description: '',
-      timeToComplete: '30 min',
-      reminder: '1 hour before',
-      due: DateTime.now().add(const Duration(days: 1)),
-      priority: 'High',
-      tags: ['Home'],
-    ),
-    Task(
-      title: 'Call mom for her birthday',
-      description: '',
-      timeToComplete: '30 min',
-      reminder: '1 hour before',
-      due: DateTime.now().add(const Duration(days: 1)),
-      priority: 'Medium',
-      tags: ['Personal'],
-    ),
-    Task(
-      title: 'Finish client logo concepts',
-      description: '',
-      timeToComplete: '2 hours',
-      reminder: '1 day before',
-      due: DateTime.now().add(const Duration(days: 2)),
-      priority: 'High',
-      tags: ['Work'],
-    ),
-    Task(
-      title: 'Submit quarterly tax docs',
-      description: '',
-      timeToComplete: '1 hour',
-      reminder: '1 day before',
-      due: DateTime.now().add(const Duration(days: 3)),
-      priority: 'Medium',
-      tags: ['Admin'],
-    ),
-  ];
-
-  void _openNewTask() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('New task is coming soon')));
-  }
 
   int _daysLeft(DateTime due) {
     final now = DateTime.now();
@@ -130,6 +73,140 @@ class _HomePageState extends State<HomePage> {
     ];
     final now = DateTime.now();
     return '${days[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
+  }
+
+  /// The form that slides up when you tap +
+  void _openAddTask() {
+    final titleController = TextEditingController();
+    String priority = 'Medium';
+    DateTime due = DateTime.now();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: HabitlyColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'New task',
+                    style: GoogleFonts.fraunces(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: HabitlyColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    'Title',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: titleController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: _cardColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    'Priority',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'Low', label: Text('Low')),
+                      ButtonSegment(value: 'Medium', label: Text('Medium')),
+                      ButtonSegment(value: 'High', label: Text('High')),
+                    ],
+                    selected: {priority},
+                    onSelectionChanged: (s) =>
+                        setSheetState(() => priority = s.first),
+                    showSelectedIcon: false,
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: HabitlyColors.terracotta,
+                      selectedForegroundColor: Colors.white,
+                      side: const BorderSide(color: HabitlyColors.outline),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    'Due',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      final picked = await showDatePicker(
+                        context: sheetContext,
+                        initialDate: due,
+                        firstDate: DateTime(now.year, now.month, now.day),
+                        lastDate: DateTime(now.year + 5),
+                      );
+                      if (picked != null) setSheetState(() => due = picked);
+                    },
+                    icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                    label: Text(_dueLabel(due)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: HabitlyColors.ink,
+                      side: const BorderSide(color: HabitlyColors.outline),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton(
+                      onPressed: () {
+                        final title = titleController.text.trim();
+                        if (title.isEmpty) return; // needs a title
+                        setState(
+                          () => _tasks.add(
+                            Task(title: title, priority: priority, due: due),
+                          ),
+                        );
+                        Navigator.pop(sheetContext);
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: HabitlyColors.terracotta,
+                        shape: const StadiumBorder(),
+                      ),
+                      child: const Text('Save task'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -181,7 +258,6 @@ class _HomePageState extends State<HomePage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       children: [
-        // Greeting, date and + button
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -190,7 +266,9 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$_greeting, ${widget.username}',
+                    widget.username.isEmpty
+                        ? _greeting
+                        : '$_greeting, ${widget.username}',
                     style: GoogleFonts.fraunces(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -209,7 +287,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             IconButton.filled(
-              onPressed: _openNewTask,
+              onPressed: _openAddTask,
               icon: const Icon(Icons.add),
               tooltip: 'New task',
               style: IconButton.styleFrom(
@@ -221,23 +299,20 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 24),
 
-        // Almost due
         if (almostDue.isNotEmpty) ...[
           _sectionTitle('Almost due'),
           _cardRow(almostDue, _dueCard),
           const SizedBox(height: 24),
         ],
-
-        // Highest priority
         if (highest.isNotEmpty) ...[
           _sectionTitle('Highest priority'),
           _cardRow(highest, _priorityCard),
           const SizedBox(height: 24),
         ],
-
-        // Work in progress
-        _sectionTitle('Work in progress'),
-        for (final task in _tasks) _progressTile(task),
+        if (_tasks.isNotEmpty) ...[
+          _sectionTitle('Work in progress'),
+          for (final task in _tasks) _progressTile(task),
+        ],
       ],
     );
   }
@@ -257,7 +332,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// Two cards side by side. With only one task, the card keeps half the width.
   Widget _cardRow(List<Task> tasks, Widget Function(Task) buildCard) {
     return Row(
       children: [
@@ -271,17 +345,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _smallLabel(String text) {
-    return Text(
-      text.toUpperCase(),
-      style: const TextStyle(
-        fontSize: 11,
-        letterSpacing: 0.8,
-        color: HabitlyColors.muted,
-      ),
-    );
-  }
-
   Widget _cardTitle(String text) {
     return Text(
       text,
@@ -292,6 +355,17 @@ class _HomePageState extends State<HomePage> {
         fontWeight: FontWeight.w800,
         height: 1.2,
         color: HabitlyColors.ink,
+      ),
+    );
+  }
+
+  Widget _smallLabel(String text) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        letterSpacing: 0.8,
+        color: HabitlyColors.muted,
       ),
     );
   }
@@ -337,7 +411,7 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _smallLabel(task.tags.isEmpty ? 'No tag' : task.tags.first),
+          _smallLabel(task.priority),
           const SizedBox(height: 8),
           Expanded(child: _cardTitle(task.title)),
           Text(
@@ -350,10 +424,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _progressTile(Task task) {
-    final subtitle = task.tags.isEmpty
-        ? _dueLabel(task.due)
-        : '${task.tags.first} · ${_dueLabel(task.due)}';
-
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -385,7 +455,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  '${task.priority} · ${_dueLabel(task.due)}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: HabitlyColors.muted,
