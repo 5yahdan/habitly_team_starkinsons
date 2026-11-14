@@ -21,7 +21,7 @@ class HabitlyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const NewTaskPage(),
+      home: const LandingPage(),
     );
   }
 }
