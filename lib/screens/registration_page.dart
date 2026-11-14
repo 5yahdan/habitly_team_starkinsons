@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'landing_page.dart';
+import 'home_page.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -24,9 +25,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   void _createAccount() {
     if (_formKey.currentState!.validate()) {
-      // TODO: save the account, then go to the Home page
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Welcome, ${_usernameController.text.trim()}!')),
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HomePage(username: _usernameController.text.trim()),
+        ),
+        (route) => false,
       );
     }
   }
